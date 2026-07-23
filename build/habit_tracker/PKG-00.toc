@@ -1,0 +1,63 @@
+('E:\\my projcts\\HabitTracker_Project\\build\\habit_tracker\\HabitTracker.pkg',
+ {'BINARY': True,
+  'DATA': True,
+  'EXECUTABLE': True,
+  'EXTENSION': True,
+  'PYMODULE': True,
+  'PYSOURCE': True,
+  'PYZ': False,
+  'SPLASH': True,
+  'SYMLINK': False},
+ [('pyi-contents-directory _internal', '', 'OPTION'),
+  ('PYZ-00.pyz',
+   'E:\\my projcts\\HabitTracker_Project\\build\\habit_tracker\\PYZ-00.pyz',
+   'PYZ'),
+  ('struct',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\build\\habit_tracker\\localpycs\\struct.pyc',
+   'PYMODULE'),
+  ('pyimod01_archive',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\build\\habit_tracker\\localpycs\\pyimod01_archive.pyc',
+   'PYMODULE'),
+  ('pyimod02_importers',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\build\\habit_tracker\\localpycs\\pyimod02_importers.pyc',
+   'PYMODULE'),
+  ('pyimod03_ctypes',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\build\\habit_tracker\\localpycs\\pyimod03_ctypes.pyc',
+   'PYMODULE'),
+  ('pyimod04_pywin32',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\build\\habit_tracker\\localpycs\\pyimod04_pywin32.pyc',
+   'PYMODULE'),
+  ('pyiboot01_bootstrap',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\venv\\Lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
+   'PYSOURCE'),
+  ('pyi_rth_inspect',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py',
+   'PYSOURCE'),
+  ('pyi_rth_pkgutil',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
+   'PYSOURCE'),
+  ('pyi_rth_multiprocessing',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_multiprocessing.py',
+   'PYSOURCE'),
+  ('pyi_rth_mplconfig',
+   'E:\\my '
+   'projcts\\HabitTracker_Project\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_mplconfig.py',
+   'PYSOURCE'),
+  ('run_app', 'E:\\my projcts\\HabitTracker_Project\\run_app.py', 'PYSOURCE')],
+ 'python312.dll',
+ True,
+ False,
+ False,
+ [],
+ None,
+ None,
+ None)

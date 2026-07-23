@@ -1,0 +1,18 @@
+{
+  "habits": [
+    {
+      "name": "Wake up early",
+      "goal": 25
+    },
+    {
+      "name": "4 hours deep work",
+      "goal": 30
+    }
+  ],
+  "logs": {
+    "2026-06-28": {
+      "Wake up early": true,
+      "4 hours deep work": true
+    }
+  }
+}
