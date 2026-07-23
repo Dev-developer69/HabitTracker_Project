@@ -1,6 +1,5 @@
 build/
 dist/
-*.spec
 habit_data.json
 .streamlit/secrets.toml
 __pycache__/
