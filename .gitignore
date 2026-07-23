@@ -1,5 +1,8 @@
+build/
+dist/
+*.spec
+habit_data.json
 .streamlit/secrets.toml
 __pycache__/
 *.pyc
 venv/
-.env
