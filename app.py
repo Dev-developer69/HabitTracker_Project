@@ -206,7 +206,7 @@ from clock_feature import render_clock_section, render_home_countdown
 if "active_view" not in st.session_state:
     st.session_state.active_view = None
 
-nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6, nav_col7 = st.columns([1, 1, 1, 0.55, 0.55, 0.55, 0.7])
+nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6 = st.columns([1, 1, 1, 0.55, 0.55, 0.7])
 nav_items = [
     (nav_col1, "checkin", "📌 Daily Check-in"),
     (nav_col2, "grid", "📊 Grid View"),
@@ -229,12 +229,6 @@ with nav_col5:
         st.session_state.show_clock = not st.session_state.get("show_clock", False)
 
 with nav_col6:
-    if st.button("🔴 Close App", key="close_app_btn", use_container_width=True,
-                  help="Fully shuts down the app process"):
-        st.session_state["_closing"] = True
-        st.rerun()
-
-with nav_col7:
     user = get_current_user()
     if st.button("🚪 Log Out", key="logout_btn", use_container_width=True,
                   help=user.email if user else None):
@@ -247,24 +241,6 @@ if st.session_state.get("show_clock", False):
 _cd_spacer, cd_col = st.columns([2.6, 1.65])
 with cd_col:
     render_home_countdown()
-
-if st.session_state.get("_closing"):
-    st.markdown("""
-    <div style="text-align:center; padding: 60px 0;">
-        <h2>👋 Habit Tracker has been closed</h2>
-        <p style="color:#b3a5d9;">Your data is safely stored in Supabase. You can close this tab now.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    def _delayed_exit():
-        import time as _time
-        import os as _os
-        _time.sleep(1.5)
-        _os._exit(0)
-
-    import threading as _threading
-    _threading.Thread(target=_delayed_exit, daemon=True).start()
-    st.stop()
 
 st.markdown("<br>", unsafe_allow_html=True)
 
