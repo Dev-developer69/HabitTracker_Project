@@ -1,40 +1,26 @@
 """
-Habit Tracker - Streamlit App (Local, JSON storage)
+Habit Tracker - Streamlit App (Supabase storage)
 Author: Built for Devansh
 Run: streamlit run app.py
 """
 
 import streamlit as st
-import json
-import os
 import datetime
 import calendar
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-
-from supabase_habits import add_habit, get_habits, mark_checkin, get_checkins_for_month
-
-habits = get_habits()
-for h in habits:
-    checked = st.checkbox(h["name"], key=f"habit_{h['id']}")
-    if checked:
-        mark_checkin(h["id"])
-
-# ---------------------------------------------------------------------------
-# CONFIG / PATHS
-# ---------------------------------------------------------------------------
-# Use a path next to the exe/script so data persists locally
-if getattr(__import__("sys"), "frozen", False):
-    BASE_DIR = os.path.dirname(__import__("sys").executable)
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_FILE = os.path.join(BASE_DIR, "habit_data.json")
+from supabase_habits import (
+    add_habit, get_habits, delete_habit, update_habit_goal,
+    mark_checkin, get_checkins_for_month,
+)
+from auth_helpers import render_auth_gate, get_current_user, sign_out
 
 st.set_page_config(page_title="Habit Tracker", page_icon="🌿", layout="wide")
 
+if not render_auth_gate():
+    st.stop()
 
 # ---------------------------------------------------------------------------
 # CALM, SOOTHING THEME (sage green + lavender pastel palette)
@@ -46,223 +32,93 @@ st.markdown("""
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
-
-/* Soft gradient app background */
 .stApp {
     background: linear-gradient(160deg, #f4f7f3 0%, #eef2f6 45%, #f3f0f7 100%);
 }
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #e8f0e6 0%, #e9e6f0 100%);
     border-right: 1px solid #d8e0d4;
 }
-section[data-testid="stSidebar"] * {
-    color: #4a5a4a;
-}
-
-/* Main title */
-h1 {
-    font-family: 'Quicksand', sans-serif;
-    color: #5b7065 !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px;
-}
-h2, h3, h4 {
-    font-family: 'Quicksand', sans-serif;
-    color: #6b6080 !important;
-    font-weight: 600 !important;
-}
-
-/* Caption under title */
-.stCaption, [data-testid="stCaptionContainer"] {
-    color: #8a9a8a !important;
-    font-style: italic;
-}
-
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
-    background: rgba(255,255,255,0.5);
-    padding: 6px;
-    border-radius: 16px;
-}
-.stTabs [data-baseweb="tab"] {
-    border-radius: 12px;
-    padding: 10px 18px;
-    background-color: transparent;
-    color: #6b6080;
-    font-weight: 500;
-    transition: all 0.25s ease;
-}
-.stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, #c9dcc4 0%, #d6cce6 100%) !important;
-    color: #4a5a4a !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-/* Buttons */
+section[data-testid="stSidebar"] * { color: #4a5a4a; }
+h1 { font-family: 'Quicksand', sans-serif; color: #5b7065 !important; font-weight: 700 !important; letter-spacing: 0.5px; }
+h2, h3, h4 { font-family: 'Quicksand', sans-serif; color: #6b6080 !important; font-weight: 600 !important; }
+.stCaption, [data-testid="stCaptionContainer"] { color: #8a9a8a !important; font-style: italic; }
+.stTabs [data-baseweb="tab-list"] { gap: 8px; background: rgba(255,255,255,0.5); padding: 6px; border-radius: 16px; }
+.stTabs [data-baseweb="tab"] { border-radius: 12px; padding: 10px 18px; background-color: transparent; color: #6b6080; font-weight: 500; transition: all 0.25s ease; }
+.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #c9dcc4 0%, #d6cce6 100%) !important; color: #4a5a4a !important; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .stButton button, .stDownloadButton button {
     background: linear-gradient(135deg, #a8c8a0 0%, #c4b8dc 100%);
-    color: #3c4a3c;
-    border: none;
-    border-radius: 12px;
-    padding: 0.5rem 1.2rem;
-    font-weight: 500;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    color: #3c4a3c; border: none; border-radius: 12px; padding: 0.5rem 1.2rem;
+    font-weight: 500; transition: transform 0.15s ease, box-shadow 0.15s ease;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
-.stButton button:hover, .stDownloadButton button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-    color: #2c3a2c;
-}
-
-/* Checkboxes */
-.stCheckbox label p {
-    font-size: 1rem;
-    color: #4a5a4a;
-}
-
-/* Progress bars - calm sage/lavender gradient */
-.stProgress > div > div > div > div {
-    background: linear-gradient(90deg, #a8c8a0 0%, #c4b8dc 100%) !important;
-    border-radius: 8px;
-}
-.stProgress > div > div {
-    background-color: #e6e6ee !important;
-    border-radius: 8px;
-}
-
-/* Metrics */
-[data-testid="stMetric"] {
-    background: rgba(255,255,255,0.65);
-    border-radius: 14px;
-    padding: 14px 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    border: 1px solid rgba(200,200,210,0.3);
-}
-[data-testid="stMetricLabel"] {
-    color: #8a9a8a !important;
-}
-[data-testid="stMetricValue"] {
-    color: #5b7065 !important;
-    font-family: 'Quicksand', sans-serif;
-}
-
-/* Data editor / dataframe containers */
-[data-testid="stDataFrame"], div[data-testid="stDataEditor"] {
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-/* Expanders in sidebar */
-.streamlit-expanderHeader {
-    background: rgba(255,255,255,0.5);
-    border-radius: 10px;
-    font-weight: 500;
-    color: #5b7065 !important;
-}
-
-/* Input fields */
-.stTextInput input, .stNumberInput input, .stDateInput input {
-    border-radius: 10px !important;
-    border: 1px solid #d8d0e6 !important;
-}
-
-/* Subtle fade-in animation for content */
-.main .block-container {
-    animation: fadeIn 0.6s ease-in;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hide default streamlit branding clutter for a calmer look */
+.stButton button:hover, .stDownloadButton button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); color: #2c3a2c; }
+.stCheckbox label p { font-size: 1rem; color: #4a5a4a; }
+.stProgress > div > div > div > div { background: linear-gradient(90deg, #a8c8a0 0%, #c4b8dc 100%) !important; border-radius: 8px; }
+.stProgress > div > div { background-color: #e6e6ee !important; border-radius: 8px; }
+[data-testid="stMetric"] { background: rgba(255,255,255,0.65); border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(200,200,210,0.3); }
+[data-testid="stMetricLabel"] { color: #8a9a8a !important; }
+[data-testid="stMetricValue"] { color: #5b7065 !important; font-family: 'Quicksand', sans-serif; }
+[data-testid="stDataFrame"], div[data-testid="stDataEditor"] { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.streamlit-expanderHeader { background: rgba(255,255,255,0.5); border-radius: 10px; font-weight: 500; color: #5b7065 !important; }
+.stTextInput input, .stNumberInput input, .stDateInput input { border-radius: 10px !important; border: 1px solid #d8d0e6 !important; }
+.main .block-container { animation: fadeIn 0.6s ease-in; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-
-/* Hide the top header bar entirely (sidebar arrow + Deploy button + colored decoration line) */
 header[data-testid="stHeader"] {display: none !important;}
 div[data-testid="stToolbar"] {display: none !important;}
 div[data-testid="stDecoration"] {display: none !important;}
 div[data-testid="stStatusWidget"] {display: none !important;}
-
-/* Push content up since header is gone */
-.block-container {
-    padding-top: 2rem !important;
-}
-
-/* Nav buttons (replacing tabs) */
-div[data-testid="stHorizontalBlock"] .stButton button {
-    width: 100%;
-    border-radius: 14px;
-    font-weight: 500;
-}
-.nav-active button {
-    background: linear-gradient(135deg, #a8c8a0 0%, #c4b8dc 100%) !important;
-    color: #2c3a2c !important;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.12) !important;
-}
-.nav-inactive button {
-    background: rgba(255,255,255,0.6) !important;
-    color: #6b6080 !important;
-    box-shadow: none !important;
-}
+.block-container { padding-top: 2rem !important; }
+div[data-testid="stHorizontalBlock"] .stButton button { width: 100%; border-radius: 14px; font-weight: 500; }
+.nav-active button { background: linear-gradient(135deg, #a8c8a0 0%, #c4b8dc 100%) !important; color: #2c3a2c !important; box-shadow: 0 3px 10px rgba(0,0,0,0.12) !important; }
+.nav-inactive button { background: rgba(255,255,255,0.6) !important; color: #6b6080 !important; box-shadow: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-
-
-
 # ---------------------------------------------------------------------------
-# DATA LAYER (simple JSON file)
+# DATA LAYER (Supabase, cached in session_state to avoid refetching every rerun)
 # ---------------------------------------------------------------------------
-DEFAULT_DATA = {
-    "habits": [
-        {"name": "Wake up early", "goal": 25},
-        {"name": "4 hours deep work", "goal": 30},
-    ],
-    "logs": {}  # logs["YYYY-MM-DD"] = {"Habit Name": true/false, ...}
-}
+def load_habits(force=False):
+    if force or "habits" not in st.session_state:
+        st.session_state.habits = get_habits()
+    return st.session_state.habits
 
 
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        save_data(DEFAULT_DATA)
-        return json.loads(json.dumps(DEFAULT_DATA))
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, FileNotFoundError):
-        save_data(DEFAULT_DATA)
-        return json.loads(json.dumps(DEFAULT_DATA))
+def load_month_checkins(year, month, force=False):
+    cache_key = f"checkins_{year}_{month}"
+    if force or cache_key not in st.session_state:
+        raw = get_checkins_for_month(year, month)
+        # Build {date_str: {habit_id: completed_bool}}
+        lookup = {}
+        for row in raw:
+            d = row["checkin_date"]
+            lookup.setdefault(d, {})[row["habit_id"]] = row["completed"]
+        st.session_state[cache_key] = lookup
+    return st.session_state[cache_key]
 
 
-def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+habits = load_habits()
+habit_id_by_name = {h["name"]: h["id"] for h in habits}
 
 
-if "data" not in st.session_state:
-    st.session_state.data = load_data()
-
-data = st.session_state.data
-
-# ---------------------------------------------------------------------------
-# HELPERS
-# ---------------------------------------------------------------------------
 def habit_names():
-    return [h["name"] for h in data["habits"]]
+    return [h["name"] for h in habits]
 
 
-def habit_goal(name):
-    for h in data["habits"]:
-        if h["name"] == name:
-            return h["goal"]
-    return 0
+def is_checked(year, month, date_str, habit_id):
+    return load_month_checkins(year, month).get(date_str, {}).get(habit_id, False)
+
+
+def set_checked(year, month, date_str, habit_id, value):
+    mark_checkin(habit_id, checkin_date=datetime.date.fromisoformat(date_str), completed=value)
+    load_month_checkins(year, month, force=True)
+
+
+def completed_count(year, month, habit_id):
+    checkins = load_month_checkins(year, month)
+    return sum(1 for entries in checkins.values() if entries.get(habit_id))
 
 
 def get_month_dates(year, month):
@@ -270,41 +126,20 @@ def get_month_dates(year, month):
     return [datetime.date(year, month, d) for d in range(1, num_days + 1)]
 
 
-def is_checked(date_str, habit):
-    return data["logs"].get(date_str, {}).get(habit, False)
-
-
-def set_checked(date_str, habit, value):
-    data["logs"].setdefault(date_str, {})[habit] = value
-
-
-def completed_count(habit, year, month):
-    count = 0
-    for date_str, entries in data["logs"].items():
-        try:
-            d = datetime.date.fromisoformat(date_str)
-        except ValueError:
-            continue
-        if d.year == year and d.month == month and entries.get(habit):
-            count += 1
-    return count
-
-
 def weekly_completion(year, month):
-    """Returns dict week_number -> total completions across all habits."""
     dates = get_month_dates(year, month)
+    checkins = load_month_checkins(year, month)
     weeks = {}
     for d in dates:
         week_no = (d.day - 1) // 7 + 1
-        date_str = d.isoformat()
-        entries = data["logs"].get(date_str, {})
+        entries = checkins.get(d.isoformat(), {})
         weeks.setdefault(week_no, 0)
         weeks[week_no] += sum(1 for v in entries.values() if v)
     return weeks
 
 
 # ---------------------------------------------------------------------------
-# SETUP — now a popover button on the main page (sidebar/header removed)
+# SETUP — popover button on the main page
 # ---------------------------------------------------------------------------
 def render_setup_popover():
     with st.popover("⚙️ Setup", use_container_width=False):
@@ -314,8 +149,8 @@ def render_setup_popover():
         if st.button("Add Habit", key="add_habit_btn"):
             if new_habit.strip():
                 if new_habit.strip() not in habit_names():
-                    data["habits"].append({"name": new_habit.strip(), "goal": int(new_goal)})
-                    save_data(data)
+                    add_habit(new_habit.strip(), int(new_goal))
+                    load_habits(force=True)
                     st.success(f"Added habit: {new_habit.strip()}")
                     st.rerun()
                 else:
@@ -328,10 +163,8 @@ def render_setup_popover():
         if habit_names():
             remove_habit = st.selectbox("Select habit to remove", habit_names(), key="remove_select")
             if st.button("Remove", key="remove_habit_btn"):
-                data["habits"] = [h for h in data["habits"] if h["name"] != remove_habit]
-                for date_str in data["logs"]:
-                    data["logs"][date_str].pop(remove_habit, None)
-                save_data(data)
+                delete_habit(habit_id_by_name[remove_habit])
+                load_habits(force=True)
                 st.success(f"Removed: {remove_habit}")
                 st.rerun()
         else:
@@ -339,17 +172,18 @@ def render_setup_popover():
 
         st.markdown("---")
         st.markdown("##### ✏️ Edit Goals")
-        for h in data["habits"]:
-            new_g = st.number_input(h["name"], min_value=1, max_value=31, value=h["goal"], key=f"goal_{h['name']}")
+        for h in habits:
+            new_g = st.number_input(h["name"], min_value=1, max_value=31, value=h["goal"], key=f"goal_{h['id']}")
             if new_g != h["goal"]:
-                h["goal"] = int(new_g)
-                save_data(data)
+                update_habit_goal(h["id"], int(new_g))
+                load_habits(force=True)
+                st.rerun()
 
         st.markdown("---")
-        st.caption(f"📁 Data file: `{DATA_FILE}`")
+        st.caption("☁️ Data stored in Supabase")
 
 # ---------------------------------------------------------------------------
-# MAIN TITLE + TOP NAV (button-style instead of tabs)
+# MAIN TITLE + TOP NAV
 # ---------------------------------------------------------------------------
 st.markdown("""
 <div style="text-align:center; padding: 4px 0 8px 0;">
@@ -362,17 +196,10 @@ st.markdown("""
 
 from clock_feature import render_clock_section
 
-# apne existing buttons ke row me, "Setup" aur "Close App" ke saath ek naya button:
-if st.button("⏱️ Clock"):
-    st.session_state.show_clock = not st.session_state.get("show_clock", False)
-
-if st.session_state.get("show_clock", False):
-    render_clock_section()
-
 if "active_view" not in st.session_state:
     st.session_state.active_view = "checkin"
 
-nav_col1, nav_col2, nav_col3, nav_col4, nav_col5 = st.columns([1, 1, 1, 0.55, 0.55])
+nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6, nav_col7 = st.columns([1, 1, 1, 0.55, 0.55, 0.55, 0.7])
 nav_items = [
     (nav_col1, "checkin", "📌 Daily Check-in"),
     (nav_col2, "grid", "📊 Grid View"),
@@ -391,17 +218,30 @@ with nav_col4:
     render_setup_popover()
 
 with nav_col5:
+    if st.button("⏱️ Clock", use_container_width=True):
+        st.session_state.show_clock = not st.session_state.get("show_clock", False)
+
+with nav_col6:
     if st.button("🔴 Close App", key="close_app_btn", use_container_width=True,
-                  help="Saves your data and fully shuts down the app (closes the background process too)"):
-        save_data(data)
+                  help="Fully shuts down the app process"):
         st.session_state["_closing"] = True
         st.rerun()
+
+with nav_col7:
+    user = get_current_user()
+    if st.button("🚪 Log Out", key="logout_btn", use_container_width=True,
+                  help=user.email if user else None):
+        sign_out()
+        st.rerun()
+
+if st.session_state.get("show_clock", False):
+    render_clock_section()
 
 if st.session_state.get("_closing"):
     st.markdown("""
     <div style="text-align:center; padding: 60px 0;">
         <h2>👋 Habit Tracker has been closed</h2>
-        <p style="color:#8a9a8a;">Your data has been saved. You can safely close this browser tab now.</p>
+        <p style="color:#8a9a8a;">Your data is safely stored in Supabase. You can close this tab now.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -425,25 +265,22 @@ if st.session_state.active_view == "checkin":
     with col1:
         selected_date = st.date_input("Select date", value=datetime.date.today())
     date_str = selected_date.isoformat()
+    yr, mo = selected_date.year, selected_date.month
 
     st.subheader(f"Habits for {selected_date.strftime('%d %B %Y')}")
 
     if not habit_names():
         st.info("No habits added yet. Use the ⚙️ Setup button above to add your first habit.")
     else:
-        changed = False
-        for h in data["habits"]:
-            current = is_checked(date_str, h["name"])
-            checked = st.checkbox(h["name"], value=current, key=f"chk_{date_str}_{h['name']}")
+        for h in habits:
+            current = is_checked(yr, mo, date_str, h["id"])
+            checked = st.checkbox(h["name"], value=current, key=f"chk_{date_str}_{h['id']}")
             if checked != current:
-                set_checked(date_str, h["name"], checked)
-                changed = True
-        if changed:
-            save_data(data)
-            st.rerun()
+                set_checked(yr, mo, date_str, h["id"], checked)
+                st.rerun()
 
-        done_today = sum(1 for h in data["habits"] if is_checked(date_str, h["name"]))
-        total_today = len(data["habits"])
+        done_today = sum(1 for h in habits if is_checked(yr, mo, date_str, h["id"]))
+        total_today = len(habits)
         st.progress(done_today / total_today if total_today else 0)
         st.caption(f"{done_today}/{total_today} habits completed today")
 
@@ -466,14 +303,13 @@ elif st.session_state.active_view == "grid":
         dates = get_month_dates(sel_year, sel_month)
         st.write("Tick the boxes below to mark a habit done on that day. Click outside the grid to save.")
 
-        # Build a DataFrame: rows = habits, columns = day numbers (+ Goal, Completed, %)
         day_cols = [str(d.day) for d in dates]
         rows = []
-        for h in data["habits"]:
+        for h in habits:
             row = {"Habit": h["name"]}
             for d in dates:
-                row[str(d.day)] = is_checked(d.isoformat(), h["name"])
-            comp = completed_count(h["name"], sel_year, sel_month)
+                row[str(d.day)] = is_checked(sel_year, sel_month, d.isoformat(), h["id"])
+            comp = completed_count(sel_year, sel_month, h["id"])
             row["Goal"] = h["goal"]
             row["Completed"] = comp
             row["%"] = round((comp / h["goal"]) * 100, 1) if h["goal"] else 0
@@ -496,22 +332,22 @@ elif st.session_state.active_view == "grid":
             key=f"grid_{sel_year}_{sel_month}",
         )
 
-        # Detect changes and save
         if not edited_df[day_cols].equals(df[day_cols]):
             for _, row in edited_df.iterrows():
-                habit_name = row["Habit"]
+                habit_id = habit_id_by_name[row["Habit"]]
                 for d in dates:
                     col = str(d.day)
-                    set_checked(d.isoformat(), habit_name, bool(row[col]))
-            save_data(data)
+                    old_val = is_checked(sel_year, sel_month, d.isoformat(), habit_id)
+                    new_val = bool(row[col])
+                    if new_val != old_val:
+                        set_checked(sel_year, sel_month, d.isoformat(), habit_id, new_val)
             st.rerun()
 
-        # Overall month progress bar chart (like the screenshot's orange bars)
         st.markdown("#### Overall Progress")
         overall_df = pd.DataFrame({
-            "Habit": [h["name"] for h in data["habits"]],
-            "Completed": [completed_count(h["name"], sel_year, sel_month) for h in data["habits"]],
-            "Goal": [h["goal"] for h in data["habits"]],
+            "Habit": [h["name"] for h in habits],
+            "Completed": [completed_count(sel_year, sel_month, h["id"]) for h in habits],
+            "Goal": [h["goal"] for h in habits],
         })
         overall_df["% Complete"] = (overall_df["Completed"] / overall_df["Goal"] * 100).round(1)
         st.dataframe(
@@ -541,7 +377,6 @@ elif st.session_state.active_view == "progress":
     if not habit_names():
         st.info("No habits added yet. Use the ⚙️ Setup button above to add your first habit.")
     else:
-        # Weekly completion bar chart
         st.markdown("#### Weekly Completion (all habits combined)")
         weeks = weekly_completion(py, pm)
         if weeks:
@@ -573,8 +408,8 @@ elif st.session_state.active_view == "progress":
                 st.pyplot(fig, transparent=True)
 
         st.markdown("#### Per-Habit Progress")
-        for h in data["habits"]:
-            comp = completed_count(h["name"], py, pm)
+        for h in habits:
+            comp = completed_count(py, pm, h["id"])
             goal = h["goal"]
             pct = min(comp / goal, 1.0) if goal else 0
             left = goal - comp
@@ -585,9 +420,8 @@ elif st.session_state.active_view == "progress":
             with c2:
                 st.metric("Completed / Goal", f"{comp}/{goal}", f"{left:+d} left")
 
-        # Overall stats
-        total_completed = sum(completed_count(h["name"], py, pm) for h in data["habits"])
-        total_goal = sum(h["goal"] for h in data["habits"])
+        total_completed = sum(completed_count(py, pm, h["id"]) for h in habits)
+        total_goal = sum(h["goal"] for h in habits)
         overall_pct = round((total_completed / total_goal) * 100, 1) if total_goal else 0
         st.markdown("---")
         m1, m2, m3 = st.columns(3)
