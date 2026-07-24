@@ -1,75 +1,81 @@
 """
-Supabase data access for Habit Tracker.
-
-NOTE: user_id is intentionally NOT passed on inserts -- the `habits` and
-`checkins` tables default that column to auth.uid(), and Row Level
-Security policies ensure each logged-in user only ever sees their own
-rows. See auth_helpers.py for the login/session handling and
-supabase_auth_migration.sql for the schema + RLS policies.
+Authentication helpers for Habit Tracker using Supabase Auth.
 """
 
-from datetime import date
-from auth_helpers import get_supabase_client
+import streamlit as st
+from supabase import create_client, Client
 
 
-# ---------- Habits ----------
+def get_supabase_client() -> Client:
+    if "sb_client" not in st.session_state:
+        url = st.secrets["supabase"]["url"]
+        key = st.secrets["supabase"]["key"]
+        st.session_state.sb_client = create_client(url, key)
+    return st.session_state.sb_client
 
-def add_habit(name: str, goal: int = 0):
+
+def sign_up(email: str, password: str):
     sb = get_supabase_client()
-    return sb.table("habits").insert({"name": name, "goal": goal}).execute()
+    return sb.auth.sign_up({"email": email, "password": password})
 
 
-def get_habits():
+def sign_in(email: str, password: str):
     sb = get_supabase_client()
-    # RLS automatically restricts this to the logged-in user's rows
-    res = sb.table("habits").select("*").execute()
-    return res.data
+    res = sb.auth.sign_in_with_password({"email": email, "password": password})
+    st.session_state.user = res.user
+    return res
 
 
-def delete_habit(habit_id: int):
+def sign_out():
     sb = get_supabase_client()
-    return sb.table("habits").delete().eq("id", habit_id).execute()
+    sb.auth.sign_out()
+    for key in ["user", "sb_client", "habits"]:
+        st.session_state.pop(key, None)
+    for key in list(st.session_state.keys()):
+        if key.startswith("checkins_"):
+            del st.session_state[key]
 
 
-def update_habit_goal(habit_id: int, goal: int):
-    sb = get_supabase_client()
-    return sb.table("habits").update({"goal": goal}).eq("id", habit_id).execute()
+def get_current_user():
+    return st.session_state.get("user")
 
 
-# ---------- Check-ins ----------
-
-def mark_checkin(habit_id: int, checkin_date: date = None, completed: bool = True):
-    sb = get_supabase_client()
-    checkin_date = checkin_date or date.today()
-    return sb.table("checkins").upsert(
-        {
-            "habit_id": habit_id,
-            "checkin_date": str(checkin_date),
-            "completed": completed,
-        },
-        on_conflict="habit_id,checkin_date",
-    ).execute()
+def current_user_id():
+    user = get_current_user()
+    return user.id if user else None
 
 
-def get_checkins(habit_id: int = None):
-    sb = get_supabase_client()
-    q = sb.table("checkins").select("*")
-    if habit_id is not None:
-        q = q.eq("habit_id", habit_id)
-    return q.execute().data
+def render_auth_gate():
+    if get_current_user():
+        return True
 
+    st.markdown("""
+    <div style="text-align:center; padding: 20px 0;">
+        <h1>🌿 Habit Tracker</h1>
+        <p style="color:#8a9a8a; font-style:italic;">Log in to see your own habits</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-def get_checkins_for_month(year: int, month: int):
-    sb = get_supabase_client()
-    start = f"{year}-{month:02d}-01"
-    end_month = month + 1 if month < 12 else 1
-    end_year = year if month < 12 else year + 1
-    end = f"{end_year}-{end_month:02d}-01"
-    res = (
-        sb.table("checkins")
-        .select("*")
-        .gte("checkin_date", start)
-        .lt("checkin_date", end)
-        .execute()
-    )
-    return res.data
+    tab_login, tab_signup = st.tabs(["Log In", "Sign Up"])
+
+    with tab_login:
+        email = st.text_input("Email", key="login_email")
+        password = st.text_input("Password", type="password", key="login_password")
+        if st.button("Log In", key="login_btn"):
+            try:
+                sign_in(email, password)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Login failed: {e}")
+
+    with tab_signup:
+        new_email = st.text_input("Email", key="signup_email")
+        new_password = st.text_input("Password (min 6 characters)", type="password", key="signup_password")
+        if st.button("Create Account", key="signup_btn"):
+            try:
+                sign_up(new_email, new_password)
+                st.success("Account created! Check your email to confirm, then log in.")
+            except Exception as e:
+                st.error(f"Sign up failed: {e}")
+
+    return False
