@@ -33,35 +33,42 @@ html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
 .stApp {
-    background: linear-gradient(160deg, #f4f7f3 0%, #eef2f6 45%, #f3f0f7 100%);
+    background: linear-gradient(160deg, #1a0f2e 0%, #241b45 45%, #2d1b4e 100%) !important;
+    color: #ffffff !important;
 }
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #e8f0e6 0%, #e9e6f0 100%);
-    border-right: 1px solid #d8e0d4;
+    background: linear-gradient(180deg, #1a0f2e 0%, #241b45 100%);
+    border-right: 1px solid #3d2a66;
 }
-section[data-testid="stSidebar"] * { color: #4a5a4a; }
-h1 { font-family: 'Quicksand', sans-serif; color: #5b7065 !important; font-weight: 700 !important; letter-spacing: 0.5px; }
-h2, h3, h4 { font-family: 'Quicksand', sans-serif; color: #6b6080 !important; font-weight: 600 !important; }
-.stCaption, [data-testid="stCaptionContainer"] { color: #8a9a8a !important; font-style: italic; }
-.stTabs [data-baseweb="tab-list"] { gap: 8px; background: rgba(255,255,255,0.5); padding: 6px; border-radius: 16px; }
-.stTabs [data-baseweb="tab"] { border-radius: 12px; padding: 10px 18px; background-color: transparent; color: #6b6080; font-weight: 500; transition: all 0.25s ease; }
-.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #c9dcc4 0%, #d6cce6 100%) !important; color: #4a5a4a !important; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+section[data-testid="stSidebar"] * { color: #ffffff !important; }
+h1 { font-family: 'Quicksand', sans-serif; color: #ffffff !important; font-weight: 700 !important; letter-spacing: 0.5px; }
+h2, h3, h4 { font-family: 'Quicksand', sans-serif; color: #d8c8f5 !important; font-weight: 600 !important; }
+p, span, div, label, .stMarkdown { color: #ffffff !important; }
+.stCaption, [data-testid="stCaptionContainer"] { color: #b3a5d9 !important; font-style: italic; }
+.stTabs [data-baseweb="tab-list"] { gap: 8px; background: rgba(255,255,255,0.06); padding: 6px; border-radius: 16px; }
+.stTabs [data-baseweb="tab"] { border-radius: 12px; padding: 10px 18px; background-color: transparent; color: #d8c8f5; font-weight: 500; transition: all 0.25s ease; }
+.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #6c3fc9 0%, #a15fd6 100%) !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 .stButton button, .stDownloadButton button {
-    background: linear-gradient(135deg, #a8c8a0 0%, #c4b8dc 100%);
-    color: #3c4a3c; border: none; border-radius: 12px; padding: 0.5rem 1.2rem;
+    background: linear-gradient(135deg, #6c3fc9 0%, #a15fd6 100%);
+    color: #ffffff; border: none; border-radius: 12px; padding: 0.5rem 1.2rem;
     font-weight: 500; transition: transform 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
-.stButton button:hover, .stDownloadButton button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); color: #2c3a2c; }
-.stCheckbox label p { font-size: 1rem; color: #4a5a4a; }
-.stProgress > div > div > div > div { background: linear-gradient(90deg, #a8c8a0 0%, #c4b8dc 100%) !important; border-radius: 8px; }
-.stProgress > div > div { background-color: #e6e6ee !important; border-radius: 8px; }
-[data-testid="stMetric"] { background: rgba(255,255,255,0.65); border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(200,200,210,0.3); }
-[data-testid="stMetricLabel"] { color: #8a9a8a !important; }
-[data-testid="stMetricValue"] { color: #5b7065 !important; font-family: 'Quicksand', sans-serif; }
-[data-testid="stDataFrame"], div[data-testid="stDataEditor"] { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.streamlit-expanderHeader { background: rgba(255,255,255,0.5); border-radius: 10px; font-weight: 500; color: #5b7065 !important; }
-.stTextInput input, .stNumberInput input, .stDateInput input { border-radius: 10px !important; border: 1px solid #d8d0e6 !important; }
+.stButton button:hover, .stDownloadButton button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.4); color: #ffffff; }
+.stCheckbox label p { font-size: 1rem; color: #ffffff !important; }
+.stProgress > div > div > div > div { background: linear-gradient(90deg, #6c3fc9 0%, #a15fd6 100%) !important; border-radius: 8px; }
+.stProgress > div > div { background-color: #2d1b4e !important; border-radius: 8px; }
+[data-testid="stMetric"] { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid rgba(163,95,214,0.3); }
+[data-testid="stMetricLabel"] { color: #b3a5d9 !important; }
+[data-testid="stMetricValue"] { color: #ffffff !important; font-family: 'Quicksand', sans-serif; }
+[data-testid="stDataFrame"], div[data-testid="stDataEditor"] { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.streamlit-expanderHeader { background: rgba(255,255,255,0.06); border-radius: 10px; font-weight: 500; color: #ffffff !important; }
+.stTextInput input, .stNumberInput input, .stDateInput input {
+    border-radius: 10px !important; border: 1px solid #4a3a75 !important;
+    background-color: #2a2050 !important; color: #ffffff !important;
+}
+.stSelectbox div[data-baseweb="select"] { background-color: #2a2050 !important; border-radius: 10px !important; }
+.stSelectbox div[data-baseweb="select"] * { color: #ffffff !important; }
 .main .block-container { animation: fadeIn 0.6s ease-in; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 #MainMenu {visibility: hidden;}
@@ -72,8 +79,8 @@ div[data-testid="stDecoration"] {display: none !important;}
 div[data-testid="stStatusWidget"] {display: none !important;}
 .block-container { padding-top: 2rem !important; }
 div[data-testid="stHorizontalBlock"] .stButton button { width: 100%; border-radius: 14px; font-weight: 500; }
-.nav-active button { background: linear-gradient(135deg, #a8c8a0 0%, #c4b8dc 100%) !important; color: #2c3a2c !important; box-shadow: 0 3px 10px rgba(0,0,0,0.12) !important; }
-.nav-inactive button { background: rgba(255,255,255,0.6) !important; color: #6b6080 !important; box-shadow: none !important; }
+.nav-active button { background: linear-gradient(135deg, #6c3fc9 0%, #a15fd6 100%) !important; color: #ffffff !important; box-shadow: 0 3px 10px rgba(0,0,0,0.4) !important; }
+.nav-inactive button { background: rgba(255,255,255,0.08) !important; color: #d8c8f5 !important; box-shadow: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -188,7 +195,7 @@ def render_setup_popover():
 st.markdown("""
 <div style="text-align:center; padding: 4px 0 8px 0;">
     <h1 style="margin-bottom:0;">🌿 Habit Tracker</h1>
-    <p style="color:#8a9a8a; font-style:italic; font-size:1.05rem; margin-top:4px;">
+    <p style="color:#b3a5d9; font-style:italic; font-size:1.05rem; margin-top:4px;">
         Until you realize what it builds ✨
     </p>
 </div>
@@ -243,7 +250,7 @@ if st.session_state.get("_closing"):
     st.markdown("""
     <div style="text-align:center; padding: 60px 0;">
         <h2>👋 Habit Tracker has been closed</h2>
-        <p style="color:#8a9a8a;">Your data is safely stored in Supabase. You can close this tab now.</p>
+        <p style="color:#b3a5d9;">Your data is safely stored in Supabase. You can close this tab now.</p>
     </div>
     """, unsafe_allow_html=True)
 
