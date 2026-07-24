@@ -204,7 +204,7 @@ st.markdown("""
 from clock_feature import render_clock_section, render_home_countdown
 
 if "active_view" not in st.session_state:
-    st.session_state.active_view = "checkin"
+    st.session_state.active_view = None
 
 nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6, nav_col7 = st.columns([1, 1, 1, 0.55, 0.55, 0.55, 0.7])
 nav_items = [
@@ -244,7 +244,9 @@ with nav_col7:
 if st.session_state.get("show_clock", False):
     render_clock_section()
 
-render_home_countdown()
+_cd_spacer, cd_col = st.columns([2.6, 1.65])
+with cd_col:
+    render_home_countdown()
 
 if st.session_state.get("_closing"):
     st.markdown("""
