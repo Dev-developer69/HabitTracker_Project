@@ -196,48 +196,52 @@ def render_clock_section(height: int = 480):
     components.html(widget_html, height=height, scrolling=False)
 
 
-def render_home_countdown(height: int = 160):
-    """A small, always-visible countdown box for the home page.
-    Black background, white text. Independent of render_clock_section."""
+def render_home_countdown(height: int = 220):
+    """A small, always-visible countdown box for the home page that counts
+    down to a target DATE (days/hours/minutes/seconds remaining).
+    Black background, white text. Target date is stored in the browser
+    (localStorage-free — uses a JS variable + Streamlit component reload),
+    so the user sets it once per session via the date input."""
 
     widget_html = """
-    <div id="home-cd" style="font-family: 'Segoe UI', sans-serif; max-width: 320px;
-         background:#000; color:#fff; border-radius: 14px; padding: 16px; text-align:center;">
+    <div id="home-cd" style="font-family: 'Segoe UI', sans-serif; max-width: 360px;
+         background:#000; color:#fff; border-radius: 14px; padding: 18px; text-align:center;">
       <style>
-        #home-cd input[type=number] {
-          width: 55px; padding: 5px; border-radius: 6px; border: 1px solid #444;
-          background: #1a1a1a; color: #fff; text-align: center; font-size: 14px;
+        #home-cd input[type=date] {
+          padding: 6px 10px; border-radius: 6px; border: 1px solid #444;
+          background: #1a1a1a; color: #fff; font-size: 14px; margin-bottom: 4px;
         }
-        #home-cd .cd-display { font-size: 30px; font-weight: 700; margin: 8px 0; }
+        #home-cd .cd-label { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+        #home-cd .cd-units { display:flex; justify-content:center; gap:14px; margin: 12px 0 6px; }
+        #home-cd .cd-unit { display:flex; flex-direction:column; align-items:center; }
+        #home-cd .cd-num { font-size: 30px; font-weight: 700; color:#fff; line-height:1; }
+        #home-cd .cd-unit-label { font-size: 11px; color:#aaa; text-transform:uppercase; margin-top:4px; letter-spacing:0.5px; }
         #home-cd button {
-          padding: 6px 14px; border: none; border-radius: 8px; font-weight: 600;
-          cursor: pointer; margin: 0 3px; background: #fff; color: #000;
+          padding: 6px 16px; border: none; border-radius: 8px; font-weight: 600;
+          cursor: pointer; background: #fff; color: #000; margin-top: 6px;
         }
-        #home-cd button.stop { background:#e5534b; color:#fff; }
-        #home-cd button.reset { background:#333; color:#fff; }
-        #home-cd .cd-msg { color:#ff6b6b; font-weight:600; margin-top:6px; min-height:18px; }
+        #home-cd .cd-msg { color:#ff6b6b; font-weight:600; margin-top:8px; min-height:18px; }
+        #home-cd .cd-title { font-size:13px; color:#ccc; margin-top:4px; }
       </style>
-      <div style="font-size:13px; color:#aaa; margin-bottom:6px;">⏳ Quick Countdown</div>
+      <div class="cd-label">⏳ Countdown to date</div>
       <div>
-        <input type="number" id="hcMin" min="0" value="5"> :
-        <input type="number" id="hcSec" min="0" max="59" value="0">
+        <input type="date" id="hcTargetDate">
+        <button onclick="hcSetTarget()">Set</button>
       </div>
-      <div class="cd-display" id="hcDisplay">05:00</div>
-      <div>
-        <button onclick="hcStart()">Start</button>
-        <button class="stop" onclick="hcStop()">Stop</button>
-        <button class="reset" onclick="hcReset()">Reset</button>
+      <div class="cd-title" id="hcTitle"></div>
+      <div class="cd-units">
+        <div class="cd-unit"><div class="cd-num" id="hcDays">--</div><div class="cd-unit-label">Days</div></div>
+        <div class="cd-unit"><div class="cd-num" id="hcHours">--</div><div class="cd-unit-label">Hrs</div></div>
+        <div class="cd-unit"><div class="cd-num" id="hcMins">--</div><div class="cd-unit-label">Min</div></div>
+        <div class="cd-unit"><div class="cd-num" id="hcSecs">--</div><div class="cd-unit-label">Sec</div></div>
       </div>
       <div class="cd-msg" id="hcMsg"></div>
     </div>
 
     <script>
-      let hcInterval = null, hcRemaining = 0;
-      function hcFormat(sec) {
-        const m = String(Math.floor(sec / 60)).padStart(2, '0');
-        const s = String(sec % 60).padStart(2, '0');
-        return `${m}:${s}`;
-      }
+      let hcTargetTime = null;
+      let hcTickInterval = null;
+
       function hcPlayAlarm() {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         let beeps = 0;
@@ -255,33 +259,41 @@ def render_home_countdown(height: int = 160):
         }
         beep();
       }
-      function hcReset() {
-        clearInterval(hcInterval); hcInterval = null;
+
+      function hcSetTarget() {
+        const val = document.getElementById('hcTargetDate').value;
+        if (!val) return;
+        hcTargetTime = new Date(val + "T00:00:00").getTime();
+        document.getElementById('hcTitle').textContent = "Counting down to " + val;
         document.getElementById('hcMsg').textContent = '';
-        const min = parseInt(document.getElementById('hcMin').value || 0);
-        const sec = parseInt(document.getElementById('hcSec').value || 0);
-        hcRemaining = min * 60 + sec;
-        document.getElementById('hcDisplay').textContent = hcFormat(hcRemaining);
+        if (hcTickInterval) clearInterval(hcTickInterval);
+        hcTick();
+        hcTickInterval = setInterval(hcTick, 1000);
       }
-      function hcStart() {
-        if (hcInterval) return;
-        if (hcRemaining <= 0) {
-          const min = parseInt(document.getElementById('hcMin').value || 0);
-          const sec = parseInt(document.getElementById('hcSec').value || 0);
-          hcRemaining = min * 60 + sec;
+
+      function hcTick() {
+        if (!hcTargetTime) return;
+        const now = Date.now();
+        let diff = hcTargetTime - now;
+        if (diff <= 0) {
+          document.getElementById('hcDays').textContent = '00';
+          document.getElementById('hcHours').textContent = '00';
+          document.getElementById('hcMins').textContent = '00';
+          document.getElementById('hcSecs').textContent = '00';
+          if (hcTickInterval) { clearInterval(hcTickInterval); hcTickInterval = null; }
+          document.getElementById('hcMsg').textContent = "🎉 Date reached!";
+          hcPlayAlarm();
+          return;
         }
-        hcInterval = setInterval(() => {
-          hcRemaining--;
-          document.getElementById('hcDisplay').textContent = hcFormat(Math.max(hcRemaining, 0));
-          if (hcRemaining <= 0) {
-            clearInterval(hcInterval); hcInterval = null;
-            document.getElementById('hcMsg').textContent = "Time's up!";
-            hcPlayAlarm();
-          }
-        }, 1000);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const mins = Math.floor((diff / (1000 * 60)) % 60);
+        const secs = Math.floor((diff / 1000) % 60);
+        document.getElementById('hcDays').textContent = String(days).padStart(2, '0');
+        document.getElementById('hcHours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('hcMins').textContent = String(mins).padStart(2, '0');
+        document.getElementById('hcSecs').textContent = String(secs).padStart(2, '0');
       }
-      function hcStop() { clearInterval(hcInterval); hcInterval = null; }
-      hcReset();
     </script>
     """
 
