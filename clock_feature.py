@@ -204,24 +204,28 @@ def render_home_countdown(height: int = 220):
     so the user sets it once per session via the date input."""
 
     widget_html = """
-    <div id="home-cd" style="font-family: 'Segoe UI', sans-serif; max-width: 360px;
-         background:#000; color:#fff; border-radius: 14px; padding: 18px; text-align:center;">
+    <style>
+      html, body { margin:0; padding:0; background:#1a1030; }
+    </style>
+    <div id="home-cd" style="font-family: 'Segoe UI', sans-serif; width: 100%; box-sizing:border-box;
+         background: linear-gradient(160deg, #1a1030 0%, #241b45 100%); color:#fff;
+         border-radius: 14px; padding: 18px; text-align:center;">
       <style>
         #home-cd input[type=date] {
-          padding: 6px 10px; border-radius: 6px; border: 1px solid #444;
-          background: #1a1a1a; color: #fff; font-size: 14px; margin-bottom: 4px;
+          padding: 6px 10px; border-radius: 6px; border: 1px solid #4a3a75;
+          background: #2a2050; color: #fff; font-size: 14px; margin-bottom: 4px;
         }
-        #home-cd .cd-label { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+        #home-cd .cd-label { font-size: 13px; color: #b3a5d9; margin-bottom: 8px; }
         #home-cd .cd-units { display:flex; justify-content:center; gap:14px; margin: 12px 0 6px; }
         #home-cd .cd-unit { display:flex; flex-direction:column; align-items:center; }
         #home-cd .cd-num { font-size: 30px; font-weight: 700; color:#fff; line-height:1; }
-        #home-cd .cd-unit-label { font-size: 11px; color:#aaa; text-transform:uppercase; margin-top:4px; letter-spacing:0.5px; }
+        #home-cd .cd-unit-label { font-size: 11px; color:#b3a5d9; text-transform:uppercase; margin-top:4px; letter-spacing:0.5px; }
         #home-cd button {
           padding: 6px 16px; border: none; border-radius: 8px; font-weight: 600;
-          cursor: pointer; background: #fff; color: #000; margin-top: 6px;
+          cursor: pointer; background: #7c5cff; color: #fff; margin-top: 6px;
         }
-        #home-cd .cd-msg { color:#ff6b6b; font-weight:600; margin-top:8px; min-height:18px; }
-        #home-cd .cd-title { font-size:13px; color:#ccc; margin-top:4px; }
+        #home-cd .cd-msg { color:#ff8a8a; font-weight:600; margin-top:8px; min-height:18px; }
+        #home-cd .cd-title { font-size:13px; color:#d0c6f0; margin-top:4px; }
       </style>
       <div class="cd-label">⏳ Countdown to date</div>
       <div>
@@ -263,6 +267,7 @@ def render_home_countdown(height: int = 220):
       function hcSetTarget() {
         const val = document.getElementById('hcTargetDate').value;
         if (!val) return;
+        localStorage.setItem('hc_target_date', val);
         hcTargetTime = new Date(val + "T00:00:00").getTime();
         document.getElementById('hcTitle').textContent = "Counting down to " + val;
         document.getElementById('hcMsg').textContent = '';
@@ -294,6 +299,19 @@ def render_home_countdown(height: int = 220):
         document.getElementById('hcMins').textContent = String(mins).padStart(2, '0');
         document.getElementById('hcSecs').textContent = String(secs).padStart(2, '0');
       }
+
+      // On load, restore any previously-saved target date so the countdown
+      // survives Streamlit reruns and browser refreshes.
+      (function hcRestore() {
+        const saved = localStorage.getItem('hc_target_date');
+        if (saved) {
+          document.getElementById('hcTargetDate').value = saved;
+          hcTargetTime = new Date(saved + "T00:00:00").getTime();
+          document.getElementById('hcTitle').textContent = "Counting down to " + saved;
+          hcTick();
+          hcTickInterval = setInterval(hcTick, 1000);
+        }
+      })();
     </script>
     """
 
